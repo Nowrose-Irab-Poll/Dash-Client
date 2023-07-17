@@ -5,14 +5,18 @@ var me;
 const channels = [];
 
 var ws = new WebSocket("ws://127.0.0.1:8080");
-ws.onopen = (e) => console.log("websocket opened");
+// var ws = new WebSocket("wss://dash-server-zav5.onrender.com");
+ws.onopen = (e) => console.log("websocket opened", e);
 ws.onclose = (e) => console.log("websocket closed");
 ws.onmessage = (e) => {
   console.log("websocket message", e.data);
   var data = JSON.parse(e.data);
-  console.log("received nessage type : ", data.action);
+  // console.log("received nessage type : ", data.action);
   console.log("received nessage body : ", data);
-  if (data.to === me) {
+
+  if (data.type == "connection-open") {
+    handleUID(data);
+  } else if (data.to === me) {
     switch (data.action) {
       case "candidate":
         console.log("received candidate in client 7", JSON.stringify(data));
@@ -61,6 +65,8 @@ ws.onmessage = (e) => {
           .catch((e) => console.log("error handling answer", e));
         break;
     }
+  } else {
+    console.log("NO ACTION REQUIRED");
   }
 };
 
@@ -140,4 +146,9 @@ function startConnection(member) {
       ws.send(JSON.stringify(dataToSend));
     })
     .catch((e) => console.log("error creating and sending offer", e));
+}
+
+function handleUID(data) {
+  console.log("Setting UID", data.uid);
+  me = data.uid;
 }

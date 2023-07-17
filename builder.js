@@ -1,11 +1,11 @@
 const packetBuilder = (data, meta) => {
-  const { uuid } = meta;
+  const { uuid, name, type, size } = meta;
   const uuidBuffer = Util.uuidStringToArrayBuffer(uuid);
 
   const packets = [];
   let offset = 0;
   for (let i = 0; offset < data.byteLength; i++, offset += COSNTS.MAX_BYTES) {
-    console.log(i);
+    // console.log(i);
     const packet = new Uint8Array(
       COSNTS.UUID_LENGTH +
         COSNTS.COUNTER_LENGTH +
@@ -22,7 +22,10 @@ const packetBuilder = (data, meta) => {
     packets.push(packet);
   }
 
-  return packets;
+  const sendingFile = new RTCFile(uuid, name, type, size, packets.length);
+  sendingFile.packets = packets;
+
+  return sendingFile;
 };
 
 const metaBuilder = (uuid, fileName, fileType, size) => {

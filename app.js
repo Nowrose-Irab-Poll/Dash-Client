@@ -9,6 +9,77 @@ const COSNTS = {
 };
 
 const ReceivingFiles = {};
+const sendingQueue = [];
+
+function sendingFileObject(rtcFile, meta, to, peer) {
+  this.rtcFile = rtcFile;
+  this.meta = meta;
+  this.to = to;
+  this.peer = peer;
+  this.retranmissionQueue = [];
+  this.isRetransmitting = false;
+
+  this.retransmitHandler = () => {
+    this.isRetransmitting = true;
+    const interval = setInterval(() => {
+      if (this.retranmissionQueue.length) {
+        console.log("retransmitting", this.retranmissionQueue.length);
+        this.retransmit();
+      } else {
+        console.log("stoping retransmission");
+        this.isRetransmitting = false;
+        clearInterval(interval);
+      }
+    }, 1000);
+  };
+
+  this.retransmit = () => {
+    while (this.retranmissionQueue.length) {
+      const peer = this.peer;
+      const packet = this.retranmissionQueue.pop();
+
+      console.log("bufferedAmount", peer.channel.bufferedAmount);
+      try {
+        if (peer.channel.bufferedAmount > 16000000) {
+          // throw new Error("bufferedAmount exceeded");
+          console.log("bufferedAmount exceeded");
+          this.retranmissionQueue.push(packet);
+          return;
+        }
+
+        peer.channel.send(packet);
+      } catch (e) {
+        console.log("Send Failed", e);
+        // this.retranmissionQueue.push(packet);
+      }
+    }
+  };
+
+  this.sendPacket = () => {
+    const peer = this.peer;
+    console.log("Sending File", this.meta);
+    peer.channel.send(JSON.stringify(this.meta));
+
+    this.rtcFile.packets.forEach((packet, index) => {
+      console.log("bufferedAmount", peer.channel.bufferedAmount);
+
+      try {
+        if (peer.channel.bufferedAmount > 16000000) {
+          throw new Error("bufferedAmount exceeded");
+        }
+
+        peer.channel.send(packet);
+      } catch (e) {
+        console.log("Send Failed", index, e);
+        this.retranmissionQueue.push(packet);
+
+        if (!this.isRetransmitting) this.retransmitHandler();
+      }
+    });
+  };
+
+  this.sendPacket();
+}
 
 function RTCFile(uuid, fileName, type, size, noOfPackets) {
   this.uuid = uuid;
@@ -73,6 +144,11 @@ function uploadFile() {
 }
 
 async function sendUploadedFile(toUser) {
+  if (!toUser) {
+    console.log("Destination not provided");
+    return;
+  }
+
   const file = uploadFile();
   if (!file) {
     console.log("No File Found");
@@ -93,9 +169,9 @@ function sendDummyPacket(toUser) {
 }
 
 function sendFile(toUser, data, meta) {
-  const packets = packetBuilder(data, meta);
+  const sendingFile = packetBuilder(data, meta);
 
-  if (!packets.length) {
+  if (!sendingFile.packets.length) {
     console.log("No packets to send");
     return;
   }
@@ -103,12 +179,8 @@ function sendFile(toUser, data, meta) {
   const index = channels.findIndex((p) => p.name == toUser);
   const peer = channels[index];
 
-  console.log("Sending File", meta);
-  peer.channel.send(JSON.stringify(meta));
-  packets.forEach((packet) => {
-    console.log("bufferedAmount", peer.channel.bufferedAmount);
-    peer.channel.send(packet);
-  });
+  sendingQueue.push(new sendingFileObject(sendingFile, meta, toUser, peer));
+  console.log("File Queued for Sending:", meta, sendingQueue);
 }
 
 function handleRTCMessage(message) {

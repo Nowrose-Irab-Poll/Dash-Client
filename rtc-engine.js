@@ -4,8 +4,8 @@ var peer = new RTCPeerConnection(config);
 var me;
 const channels = [];
 
-var ws = new WebSocket("ws://127.0.0.1:8080");
-// var ws = new WebSocket("wss://dash-server-zav5.onrender.com");
+// var ws = new WebSocket("ws://127.0.0.1:8080");
+var ws = new WebSocket("wss://dash-server-zav5.onrender.com");
 ws.onopen = (e) => console.log("websocket opened", e);
 ws.onclose = (e) => console.log("websocket closed");
 ws.onmessage = (e) => {

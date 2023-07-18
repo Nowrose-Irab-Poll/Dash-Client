@@ -1,5 +1,10 @@
-var config = { iceServers: [] };
-var peer = new RTCPeerConnection(config);
+const peerConnectionConfig = {
+  iceServers: [
+    { urls: "stun:stun.stunprotocol.org:3478" },
+    { urls: "stun:stun.l.google.com:19302" },
+  ],
+};
+// var peer = new RTCPeerConnection(peerConnectionConfig);
 
 var me;
 const channels = [];
@@ -72,7 +77,7 @@ ws.onmessage = (e) => {
 
 function PeerChannel(name) {
   this.name = name;
-  this.peer = new RTCPeerConnection(config);
+  this.peer = new RTCPeerConnection(peerConnectionConfig);
   this.channel = this.peer.createDataChannel("hello");
   _this = this;
 

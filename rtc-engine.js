@@ -2,6 +2,7 @@ const peerConnectionConfig = {
   iceServers: [
     { urls: "stun:stun.stunprotocol.org:3478" },
     { urls: "stun:stun.l.google.com:19302" },
+    { urls: "turn:172.104.36.223", credential: "mango", username: "rotten" },
   ],
 };
 // var peer = new RTCPeerConnection(peerConnectionConfig);

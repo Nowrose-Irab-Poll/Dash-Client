@@ -1,6 +1,8 @@
 const UserAgent = {
   uid: null,
   userName: null,
+  hostedFiles: new ArrayMap("HostedFiles"),
+
   getUid: function () {
     return this.uid;
   },

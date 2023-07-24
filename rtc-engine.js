@@ -7,11 +7,10 @@ const peerConnectionConfig = {
 };
 // var peer = new RTCPeerConnection(peerConnectionConfig);
 
-var me;
 const channels = [];
 
-// var ws = new WebSocket("ws://127.0.0.1:8080");
-var ws = new WebSocket("wss://dash-server-zav5.onrender.com");
+var ws = new WebSocket("ws://127.0.0.1:8080");
+// var ws = new WebSocket("wss://dash-server-zav5.onrender.com");
 ws.onopen = (e) => console.log("websocket opened", e);
 ws.onclose = (e) => console.log("websocket closed");
 ws.onmessage = (e) => {
@@ -22,7 +21,7 @@ ws.onmessage = (e) => {
 
   if (data.type == "connection-open") {
     handleUID(data);
-  } else if (data.to === me) {
+  } else if (data.to === UserAgent.getUid()) {
     switch (data.action) {
       case "candidate":
         console.log("received candidate in client 7", JSON.stringify(data));
@@ -48,7 +47,7 @@ ws.onmessage = (e) => {
                 action: "answer",
                 to: data.from,
                 data: sdp,
-                from: me,
+                from: UserAgent.getUid(),
               })
             );
             newPeer.peer.setLocalDescription(sdp);
@@ -104,7 +103,7 @@ function PeerChannel(name) {
         action: "candidate",
         to: _this.name,
         data: e.candidate,
-        from: me,
+        from: UserAgent.getUid(),
       })
     );
   };
@@ -124,7 +123,7 @@ function startGroup(members) {
           action: "offer",
           to: channels[pos].name,
           data: sdp,
-          from: me,
+          from: UserAgent.getUid(),
         };
         console.log("Sending offer to server : ", JSON.stringify(dataToSend));
         ws.send(JSON.stringify(dataToSend));
@@ -146,7 +145,7 @@ function startConnection(member) {
         action: "offer",
         to: channels[pos].name,
         data: sdp,
-        from: me,
+        from: UserAgent.getUid(),
       };
       console.log("Sending offer to server : ", JSON.stringify(dataToSend));
       ws.send(JSON.stringify(dataToSend));
@@ -156,5 +155,6 @@ function startConnection(member) {
 
 function handleUID(data) {
   console.log("Setting UID", data.uid);
-  me = data.uid;
+  UserAgent.setUid(data.uid);
+  // me = data.uid;
 }

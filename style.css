@@ -1,0 +1,23 @@
+#left-sidebar {
+  background-color: aquamarine;
+}
+
+#central-workspace {
+  background-color: antiquewhite;
+}
+
+#right-sidebar {
+  background-color: burlywood;
+}
+
+#qr-code {
+  margin: 0.5rem;
+  height: 256px;
+}
+
+#qr-section {
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
